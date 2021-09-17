@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title>versus test</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.3/vue.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+  <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.4.2/jquery.min.js" charset="utf-8"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-deparam/0.5.1/jquery-deparam.min.js" charset="utf-8"></script>
+
+
+  <style media="screen">
+    h3 {
+      margin-bottom: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .options {
+      padding-bottom: 1rem;
+      border-bottom: 1px solid LightGrey;
+    }
+  </style>
+
+</head>
+
+<body>
+
+</html>
+<div id="app">
+  <div class="options">
+    <h3>Category</h3>
+    <template v-for="option in category">
+      <input :id="option" type="checkbox" :value="option" v-model="checked.category"><label :for="option">{{ option }}</label>
+    </template>
+    <h3>Type</h3>
+    <template v-for="option in type">
+      <input :id="option" type="checkbox" :value="option" v-model="checked.type"><label :for="option">{{ option }}</label>
+    </template>
+    <h3>Material</h3>
+    <template v-for="option in material">
+      <input :id="option" type="checkbox" :value="option" v-model="checked.material"><label :for="option">{{ option }}</label>
+    </template>
+  </div>
+  <div class="features">
+    <div v-for="feature in features" v-show="visible(feature.category, feature.type, feature.material)">
+      <h3><a href="./foglia.html">{{ feature.name }}</h3></a>
+      <p>Category: <template v-for="(category, index) in feature.category">{{ category }}{{ index == feature.category.length - 1 ? '' : ', ' }}</template></p>
+      <p>Type: <template v-for="(type, index) in feature.type">{{ type }}{{ index == feature.type.length - 1 ? '' : ', ' }}</template></p>
+      <p>Material: <template v-for="(material, index) in feature.material">{{ material }}{{ index == feature.material.length - 1 ? '' : ', ' }}</template></p>
+    </div>
+  </div>
+</div>
+</body>
+
+
+
+
+
+
+
+<script type="text/javascript">
+
+let importedData = {
+  features: [
+    { name: 'Chefchaouen',
+      category: ['City/town'],
+      type: ['New'],
+      material: ['Stone','Wood'] },
+    { name: 'Underground city of Derinkuyu',
+      category: ['City/town'],
+      type: ['Traditional','New'],
+      material: ['Stone','Earth','Wood'] },
+    { name: 'Granaries and threshing-floors in Soajo and Lindoso',
+      category: ['Architecture/building'],
+      type: ['New'],
+      material: ['Wood'] },
+    { name: 'Granaries and threshing-floors in Soajo and Lindoso',
+      category: ['Architecture/building'],
+      type: ['Traditional'],
+      material: ['Wood','Bricks','Posidonia'] },
+    { name: 'Pallozas in Lugo',
+      category: ['Architecture/building'],
+      type: ['New'],
+      material: ['Stone','Wood'] },
+    { name: 'Paper log house',
+      category: ['Architecture/building', 'Building technique'],
+      type: ['New'],
+      material: ['Wood','Stone','Posidonia'] },
+    { name: 'External venetian blinds',
+      category: ['Building technique'],
+      type: ['New', 'Reahabilitation'],
+      material: ['Stone'] },
+    { name: 'Fundaciòn Pilar and Joan Mirò in Palma de Mallorca',
+      category: ['Architecture/building'],
+      type: ['Traditional'],
+      material: ['Wood'] },
+  ],
+  checked: {
+    category: [],
+    type: [],
+    material: []
+  }
+}
+
+let updateUrl = function() {
+  const url = new URL(window.location);
+  url.searchParams.set('filters', $.param(importedData.checked));
+  window.history.pushState({}, '', url);
+}
+
+let readUrl = function() {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  const params = Object.fromEntries(urlSearchParams.entries());
+  let filters = params.filters;
+  deparamedQuery = $.deparam(filters);
+
+  importedData.checked.category = deparamedQuery.category || [];
+  importedData.checked.type = deparamedQuery.type || [];
+  importedData.checked.material = deparamedQuery.material || [];
+
+}
+
+new Vue({
+el: '#app',
+data: importedData,
+computed: {
+  category: function() {
+    return this.available('category').sort((a, b) => a - b);
+  },
+  type: function() {
+    return this.available('type').sort((a, b) => a - b);
+  },
+  material: function() {
+    return this.available('material').sort((a, b) => a < b ? -1 : 1);
+  }
+},
+methods: {
+  available: function(category) {
+    const categorySet = new Set([]);
+    for (var i = 0; i < this.features.length; i++) {
+      this.features[i][category].forEach(el => categorySet.add(el));
+    }
+    return [...categorySet];
+  },
+  visible: function(category, type, material) {
+    const categorys = this.checked.category.length ? _.intersection(category, this.checked.category).length : true;
+    const types = this.checked.type.length ? _.intersection(type, this.checked.type).length : true;
+    const materials = this.checked.material.length ? _.intersection(material, this.checked.material).length : true;
+    if (categorys && types && materials) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+},
+watch: {
+  checked: {
+    handler(val){
+      updateUrl();
+    },
+    deep: true
+  }
+},
+mounted() {
+  console.log('mounted');
+  readUrl();
+}
+})
+
+
+
+</script>
